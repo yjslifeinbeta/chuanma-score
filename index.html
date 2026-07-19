@@ -92,7 +92,7 @@ select{width:100%;min-height:42px;border:1px solid var(--line);background:white;
 <body>
 <div class="app">
   <div class="topbar">
-    <div><h1 class="title">川麻记分</h1><div class="subtitle">V8.2 · 修正版查叫：未下叫赔给已下叫</div></div>
+    <div><h1 class="title">川麻记分</h1><div class="subtitle">V8.4 · 杠分锁定、分账结算与未下叫退税</div></div>
     <button class="icon-btn" id="settingsBtn">设置/改名</button>
   </div>
   <section class="card">
@@ -128,10 +128,11 @@ select{width:100%;min-height:42px;border:1px solid var(--line);background:white;
 </div>
 <div class="overlay" id="roundEndOverlay">
   <div class="sheet">
-    <div class="section-head"><div><div class="section-title">结束本局 / 查叫</div><div class="section-sub">只处理仍未胡的玩家：已下叫者收款，未下叫者付款</div></div><button class="icon-btn" id="roundEndClose">取消</button></div>
+    <div class="section-head"><div><div class="section-title">结束本局 / 查叫</div><div class="section-sub">处理查叫，并将未下叫玩家已收到的杠分原路退回</div></div><button class="icon-btn" id="roundEndClose">取消</button></div>
     <div class="round-status-list" id="roundStatusList"></div>
     <div class="round-preview"><div class="round-preview-title">查叫付款预览</div><div id="roundTransferPreview"></div></div>
-    <div class="note">查叫规则：已下叫但未胡的玩家不需要额外付款；每位未下叫玩家，分别向每位已下叫未胡玩家支付其“最大可胡牌型”的点炮分。若全部已下叫或全部未下叫，则查叫为 0。</div>
+    <div class="round-preview"><div class="round-preview-title">未下叫退税预览</div><div id="taxRefundPreview"></div></div>
+    <div class="note">查叫：每位未下叫玩家分别向每位已下叫未胡玩家支付其最大可胡牌型的点炮分。退税：未下叫玩家本局已经收到的暗杠、明杠和补杠收入，按原付款人和原金额退回；已下叫未胡者保留杠分。</div>
     <div class="modal-actions"><button class="btn ghost" id="roundEndCancel">返回</button><button class="btn ok" id="roundEndConfirm">确认并开始下一局</button></div>
   </div>
 </div>
@@ -156,7 +157,7 @@ select{width:100%;min-height:42px;border:1px solid var(--line);background:white;
       <div class="field2"><label>明杠 / 点杠者</label><input id="dianyu" type="number" min="0"></div>
       <div class="field2"><label>暗杠 / 每人</label><input id="anyu" type="number" min="0"></div>
     </div>
-    <div class="note">点炮胡可以选择多个赢家；自摸、暗杠和补杠会自动向所有仍在局中的其他玩家结算。玩家默认名称可直接在这里改成你们自己的名字。</div>
+    <div class="note">点炮胡可以选择多个赢家。杠分在确认时按当时仍在局的玩家立即锁定，之后有人胡牌也不会改变旧杠记录；流局未下叫时再原路退还该玩家收到的杠分。</div>
   </div>
 </div>
 <script>
@@ -225,7 +226,7 @@ function renderMode(){$$('.mode-btn').forEach(b=>b.classList.toggle('selected',b
 function renderLive(){const d=currentDeltas();$('#deltaBoard').innerHTML=state.players.map((p,i)=>`<div class="dcard p${i}"><div class="delta-label">${esc(p)}</div><div class="delta ${d[i]>0?'pos':d[i]<0?'neg':''}">${d[i]>0?'+':''}${d[i]}</div><div class="delta-note">${d[i]>0?'本次收入':d[i]<0?'本次支出':'暂无变化'}</div></div>`).join('');let text='请选择玩家，结果会立即显示。';const transfers=currentTransfers();if(d.some(v=>v!==0)){if(draft.mode==='dianpao'){text=`${state.players[draft.payer]} 共付 <b>${-d[draft.payer]}</b> 分；${draft.winners.map(w=>`${state.players[w.player]} 收 ${d[w.player]} 分`).join('，')}。`;}else{text=`${state.players[draft.singleWinner]} 本次共收 <b>${d[draft.singleWinner]}</b> 分。`;}}$('#liveSummary').innerHTML=text;$('#flowList').innerHTML=transfers.length?transfers.map(t=>`<div class="flow-item">${esc(state.players[t.from])} <b>给</b> ${esc(state.players[t.to])} <b>${t.score}</b> 分</div>`).join(''):'<div class="flow-item">这里会显示“谁给谁多少分”。</div>';}
 function clearDraft(){draft=newDraft();renderMode();}
 function isDraftValid(){if(draft.mode==='dianpao')return draft.payer!==null&&draft.winners.length>0;if(draft.mode==='dianyu')return draft.singleWinner!==null&&draft.singlePayer!==null;return draft.singleWinner!==null;}
-function confirmDraft(){if(!isDraftValid()){alert('请先选择完整的赢家和付款玩家。');return;}const deltas=currentDeltas();let detail={},winners=[];if(draft.mode==='dianpao'){winners=clone(draft.winners);detail={payer:draft.payer,winners};}else if(draft.mode==='zimo'){const w=newWinnerFromSingle();winners=[w];detail={winner:w};}else{detail={winner:draft.singleWinner,payer:draft.singlePayer};}state.events.push({id:Date.now()+Math.random(),round:state.round,mode:draft.mode,detail,deltas,activeBefore:state.active.slice()});if(['dianpao','zimo'].includes(draft.mode))winners.forEach(w=>state.active[w.player]=false);save();clearDraft();renderAll();}
+function confirmDraft(){if(!isDraftValid()){alert('请先选择完整的赢家和付款玩家。');return;}const deltas=currentDeltas(),transfers=currentTransfers();let detail={},winners=[];if(draft.mode==='dianpao'){winners=clone(draft.winners);detail={payer:draft.payer,winners,transfers};}else if(draft.mode==='zimo'){const w=newWinnerFromSingle();winners=[w];detail={winner:w,transfers};}else{detail={winner:draft.singleWinner,payer:draft.singlePayer,transfers};}state.events.push({id:Date.now()+Math.random(),round:state.round,mode:draft.mode,detail,deltas,activeBefore:state.active.slice()});if(['dianpao','zimo'].includes(draft.mode))winners.forEach(w=>state.active[w.player]=false);save();clearDraft();renderAll();}
 function buildRoundEndState(){roundEndState={};state.active.forEach((a,i)=>{if(a)roundEndState[i]={status:'ting',hand:0,roots:0};});}
 function roundEndScore(r){return Math.min(state.rules.cap,HANDS[Number(r.hand)||0].base*Math.pow(2,Number(r.roots)||0));}
 function renderRoundEnd(){
@@ -267,9 +268,28 @@ function calcRoundEndTransfers(){
   noting.forEach(from=>ting.forEach(t=>transfers.push({from,to:t.player,score:t.score})));
   return transfers;
 }
-function roundEndDeltas(){const d=[0,0,0,0];calcRoundEndTransfers().forEach(t=>{d[t.from]-=t.score;d[t.to]+=t.score;});return d;}
+function gangTransfersForRound(round){
+  const modes=['anyu','dianyu','bayu'],arr=[];
+  state.events.filter(e=>e.round===round&&modes.includes(e.mode)).forEach(e=>{
+    if(Array.isArray(e.detail&&e.detail.transfers))e.detail.transfers.forEach(t=>arr.push({...t,eventId:e.id,mode:e.mode}));
+    else{
+      const winner=e.detail&&e.detail.winner;
+      if(winner===undefined||winner===null)return;
+      e.deltas.forEach((v,i)=>{if(v<0)arr.push({from:i,to:winner,score:-v,eventId:e.id,mode:e.mode});});
+    }
+  });
+  return arr;
+}
+function calcTaxRefundTransfers(){
+  const noting=new Set(Object.entries(roundEndState).filter(([,v])=>v.status==='noting').map(([k])=>Number(k)));
+  return gangTransfersForRound(state.round).filter(t=>noting.has(t.to)).map(t=>({from:t.to,to:t.from,score:t.score,sourceMode:t.mode}));
+}
+function deltasFromTransfers(transfers){const d=[0,0,0,0];transfers.forEach(t=>{d[t.from]-=t.score;d[t.to]+=t.score;});return d;}
+function addDeltas(a,b){return a.map((v,i)=>v+(b[i]||0));}
+function roundEndDeltas(){return addDeltas(deltasFromTransfers(calcRoundEndTransfers()),deltasFromTransfers(calcTaxRefundTransfers()));}
 function renderRoundTransferPreview(){
   const transfers=calcRoundEndTransfers();
+  const refunds=calcTaxRefundTransfers();
   const tingCount=Object.values(roundEndState).filter(v=>v.status==='ting').length;
   const notingCount=Object.values(roundEndState).filter(v=>v.status==='noting').length;
   if(!transfers.length){
@@ -278,17 +298,28 @@ function renderRoundTransferPreview(){
   }else{
     $('#roundTransferPreview').innerHTML=transfers.map(t=>`<div class="flow-item">${esc(state.players[t.from])} 给 ${esc(state.players[t.to])} <b>${t.score}</b> 分</div>`).join('');
   }
+  $('#taxRefundPreview').innerHTML=refunds.length?refunds.map(t=>`<div class="flow-item">${esc(state.players[t.from])} 退给 ${esc(state.players[t.to])} <b>${t.score}</b> 分</div>`).join(''):'<div class="round-preview-empty">当前无需退税；已下叫未胡玩家保留杠分。</div>';
 }
 function openRoundEnd(){buildRoundEndState();renderRoundEnd();$('#roundEndOverlay').classList.add('open');}
 function closeRoundEnd(){$('#roundEndOverlay').classList.remove('open');}
-function confirmRoundEnd(){const statuses=clone(roundEndState),transfers=calcRoundEndTransfers(),deltas=roundEndDeltas();state.events.push({id:Date.now()+Math.random(),round:state.round,mode:'liuju',detail:{statuses,transfers},deltas,activeBefore:state.active.slice()});state.round++;state.active=[true,true,true,true];save();closeRoundEnd();clearDraft();renderAll();}
-function totalsForRound(round){const t=[0,0,0,0];state.events.filter(e=>e.round===round).forEach(e=>e.deltas.forEach((v,i)=>t[i]+=v));return t;}
+function confirmRoundEnd(){const statuses=clone(roundEndState),transfers=calcRoundEndTransfers(),refundTransfers=calcTaxRefundTransfers(),checkDeltas=deltasFromTransfers(transfers),refundDeltas=deltasFromTransfers(refundTransfers),deltas=addDeltas(checkDeltas,refundDeltas);state.events.push({id:Date.now()+Math.random(),round:state.round,mode:'liuju',detail:{statuses,transfers,refundTransfers,checkDeltas,refundDeltas},deltas,activeBefore:state.active.slice()});state.round++;state.active=[true,true,true,true];save();closeRoundEnd();clearDraft();renderAll();}
+function eventCategoryDeltas(e,category){
+  const gangModes=['anyu','dianyu','bayu'];
+  if(gangModes.includes(e.mode))return category==='gang'?e.deltas:[0,0,0,0];
+  if(e.mode==='liuju'){
+    if(category==='gang')return (e.detail&&e.detail.refundDeltas)||[0,0,0,0];
+    return (e.detail&&e.detail.checkDeltas)||e.deltas;
+  }
+  return category==='hu'?e.deltas:[0,0,0,0];
+}
+function totalsForRound(round,category='all'){const t=[0,0,0,0];state.events.filter(e=>e.round===round).forEach(e=>{const d=category==='all'?e.deltas:eventCategoryDeltas(e,category);d.forEach((v,i)=>t[i]+=v);});return t;}
 function transfersFromTotals(t){const debt=t.map((v,i)=>({player:i,amount:-v})).filter(x=>x.amount>0);const credit=t.map((v,i)=>({player:i,amount:v})).filter(x=>x.amount>0);const out=[];let di=0,ci=0;while(di<debt.length&&ci<credit.length){const amount=Math.min(debt[di].amount,credit[ci].amount);if(amount>0)out.push({from:debt[di].player,to:credit[ci].player,score:amount});debt[di].amount-=amount;credit[ci].amount-=amount;if(debt[di].amount===0)di++;if(credit[ci].amount===0)ci++;}return out;}
-function renderRoundSettlement(){const roundEvents=state.events.filter(e=>e.round===state.round);if(!roundEvents.length){$('#roundSettlement').innerHTML='';return;}const t=totalsForRound(state.round);const flows=transfersFromTotals(t);$('#roundSettlement').innerHTML=`<div class="round-settlement"><div class="round-settlement-title">本局最终结算</div><div class="round-settlement-sub">按本局所有已确认记录净额合并，尽量减少付款笔数</div><div class="round-net-grid">${state.players.map((p,i)=>`<div class="round-net p${i}"><div class="round-net-name">${esc(p)}</div><div class="round-net-score ${t[i]>0?'pos':t[i]<0?'neg':''}">${t[i]>0?'+':''}${t[i]}</div></div>`).join('')}</div><div class="round-flow-list">${flows.length?flows.map(x=>`<div class="round-flow">${esc(state.players[x.from])} 给 ${esc(state.players[x.to])} <b>${x.score}</b> 分</div>`).join(''):'<div class="round-flow">本局净分已经平衡，无需付款。</div>'}</div></div>`;}
+function settlementBlock(title,sub,t){const flows=transfersFromTotals(t);return `<div class="round-settlement"><div class="round-settlement-title">${title}</div><div class="round-settlement-sub">${sub}</div><div class="round-net-grid">${state.players.map((p,i)=>`<div class="round-net p${i}"><div class="round-net-name">${esc(p)}</div><div class="round-net-score ${t[i]>0?'pos':t[i]<0?'neg':''}">${t[i]>0?'+':''}${t[i]}</div></div>`).join('')}</div><div class="round-flow-list">${flows.length?flows.map(x=>`<div class="round-flow">${esc(state.players[x.from])} 给 ${esc(state.players[x.to])} <b>${x.score}</b> 分</div>`).join(''):'<div class="round-flow">当前净分为 0，无需付款。</div>'}</div></div>`;}
+function renderRoundSettlement(){const roundEvents=state.events.filter(e=>e.round===state.round);if(!roundEvents.length){$('#roundSettlement').innerHTML='';return;}const hu=totalsForRound(state.round,'hu'),gang=totalsForRound(state.round,'gang'),all=totalsForRound(state.round,'all');$('#roundSettlement').innerHTML=settlementBlock('胡牌 / 查叫净分','不含杠分，显示点炮、自摸及查叫结果',hu)+settlementBlock('杠分净额','杠发生时锁定；流局未下叫的退税会冲回这里',gang)+settlementBlock('本局合计','胡牌、查叫与杠分合并后的最终结果',all);}
 function finalTransfers(){return transfersFromTotals(totals());}
 function openFinalSettlement(){const t=totals();$('#finalTotals').innerHTML=state.players.map((p,i)=>`<div class="settle-card p${i}"><div class="name">${esc(p)}</div><div class="score ${t[i]>0?'pos':t[i]<0?'neg':''}">${t[i]>0?'+':''}${t[i]}</div></div>`).join('');const flows=finalTransfers();$('#finalFlows').innerHTML=flows.length?flows.map(x=>`<div class="settle-flow">${esc(state.players[x.from])} 给 ${esc(state.players[x.to])} <b>${x.score}</b> 分</div>`).join(''):'<div class="empty">当前所有玩家净分均已平衡，无需付款。</div>';$('#finalSettlementOverlay').classList.add('open');}
 function closeFinalSettlement(){$('#finalSettlementOverlay').classList.remove('open');}
-function renderEvents(){const list=state.events.filter(e=>e.round===state.round).slice().reverse();if(!list.length){$('#eventList').innerHTML='<div class="empty">本局还没有记录</div>';renderRoundSettlement();return;}$('#eventList').innerHTML=list.map(e=>{let sub='';if(e.mode==='dianpao'){sub=`${state.players[e.detail.payer]} 点炮；`+e.detail.winners.map(w=>`${state.players[w.player]}：${HANDS[w.hand].name}${w.roots?`/ ${w.roots}根`:''}${w.special!=='normal'?`/ ${specialName(w.special)}`:''}${w.haidi?'/ 海底':''}`).join('；');}else if(e.mode==='zimo'){const w=e.detail.winner;sub=`${state.players[w.player]}：${HANDS[w.hand].name}${w.roots?`/ ${w.roots}根`:''}${w.special!=='normal'?`/ ${specialName(w.special)}`:''}${w.haidi?'/ 海底':''}`;}else if(e.mode==='dianyu'){sub=`${state.players[e.detail.winner]} 得分，${state.players[e.detail.payer]} 付款`;}else if(e.mode==='liuju'){const arr=Object.entries(e.detail.statuses||{}).map(([i,v])=>v.status==='ting'?`${state.players[Number(i)]}：已下叫未胡（${HANDS[Number(v.hand)||0].name}${Number(v.roots)?`/${v.roots}根`:''}）`:`${state.players[Number(i)]}：未下叫`);const pays=(e.detail.transfers||[]).map(t=>`${state.players[t.from]}给${state.players[t.to]}${t.score}分`);sub=arr.join('；')+(pays.length?'；'+pays.join('，'):'；无查叫付款');}else{sub=`${state.players[e.detail.winner]} 得分`;}const plus=e.deltas.filter(v=>v>0).reduce((a,b)=>a+b,0);return `<div class="list-line"><div><div class="list-main">${eventLabel(e.mode)}</div><div class="list-sub">${esc(sub)}</div></div><div class="list-score">${plus?`+${plus}`:'0'}</div></div>`;}).join('');renderRoundSettlement();}
+function renderEvents(){const list=state.events.filter(e=>e.round===state.round).slice().reverse();if(!list.length){$('#eventList').innerHTML='<div class="empty">本局还没有记录</div>';renderRoundSettlement();return;}$('#eventList').innerHTML=list.map(e=>{let sub='';if(e.mode==='dianpao'){sub=`${state.players[e.detail.payer]} 点炮；`+e.detail.winners.map(w=>`${state.players[w.player]}：${HANDS[w.hand].name}${w.roots?`/ ${w.roots}根`:''}${w.special!=='normal'?`/ ${specialName(w.special)}`:''}${w.haidi?'/ 海底':''}`).join('；');}else if(e.mode==='zimo'){const w=e.detail.winner;sub=`${state.players[w.player]}：${HANDS[w.hand].name}${w.roots?`/ ${w.roots}根`:''}${w.special!=='normal'?`/ ${specialName(w.special)}`:''}${w.haidi?'/ 海底':''}`;}else if(e.mode==='dianyu'){sub=`${state.players[e.detail.winner]} 得分，${state.players[e.detail.payer]} 付款（杠分已锁定）`;}else if(e.mode==='liuju'){const arr=Object.entries(e.detail.statuses||{}).map(([i,v])=>v.status==='ting'?`${state.players[Number(i)]}：已下叫未胡（${HANDS[Number(v.hand)||0].name}${Number(v.roots)?`/${v.roots}根`:''}）`:`${state.players[Number(i)]}：未下叫`);const pays=(e.detail.transfers||[]).map(t=>`${state.players[t.from]}给${state.players[t.to]}${t.score}分`);const refunds=(e.detail.refundTransfers||[]).map(t=>`${state.players[t.from]}退给${state.players[t.to]}${t.score}分`);sub=arr.join('；')+(pays.length?'；查叫：'+pays.join('，'):'；无查叫付款')+(refunds.length?'；退税：'+refunds.join('，'):'；无退税');}else{const ts=(e.detail&&e.detail.transfers)||[];sub=`${state.players[e.detail.winner]} 得分`+(ts.length?`；${ts.map(t=>`${state.players[t.from]}给${state.players[t.to]}${t.score}分`).join('，')}（已锁定）`:'');}const plus=e.deltas.filter(v=>v>0).reduce((a,b)=>a+b,0);return `<div class="list-line"><div><div class="list-main">${eventLabel(e.mode)}</div><div class="list-sub">${esc(sub)}</div></div><div class="list-score">${plus?`+${plus}`:'0'}</div></div>`;}).join('');renderRoundSettlement();}
 function renderHistory(){const rounds=new Set(state.events.map(e=>e.round)).size;$('#historyText').textContent=`已记录 ${rounds} 局、${state.events.length} 笔结算。`;}
 function renderAll(){renderScoreboard();renderMode();renderEvents();renderHistory();}
 function undo(){if(!state.events.length){alert('没有可以撤销的记录。');return;}const e=state.events.pop();state.active=e.activeBefore.slice();save();clearDraft();renderAll();}
