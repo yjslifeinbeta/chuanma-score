@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f7f3ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="川麻记分">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>川麻记分 · 血战到底 V8.3</title>
+<style>
+:root{
+  --bg:#f7f3ec;--card:#fff;--soft:#fcfaf7;--ink:#202329;--muted:#77736d;--line:#e7ded1;
+  --purple:#6e5a8c;--purple-soft:#f0eaf7;--green:#2f7d68;--green-soft:#e8f3ee;
+  --gold:#9b6923;--gold-soft:#faf0dc;--red:#b34e48;--shadow:0 10px 30px rgba(74,57,39,.07);
+  --p0:#b66a6a;--p0-soft:#f4e9e9;--p1:#6f8f76;--p1-soft:#ebf1ec;
+  --p2:#b49a58;--p2-soft:#f6f0e3;--p3:#7088a5;--p3-soft:#ebf0f6;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",Arial,sans-serif}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+button,input,select{font:inherit}button{touch-action:manipulation}
+.app{max-width:760px;margin:auto;padding:14px 14px 42px}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 2px 14px}
+.title{font-size:23px;font-weight:860;letter-spacing:-.45px;margin:0}
+.subtitle{font-size:12px;color:var(--muted);margin-top:4px}
+.icon-btn{border:0;background:#ece7de;color:#4e4943;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:760}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-title{font-size:16px;font-weight:830}
+.section-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.pill{background:var(--purple-soft);color:#574873;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:770}
+.scoreboard,.delta-board{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.pcard,.dcard{border:2px solid transparent;border-radius:18px;padding:11px 6px;text-align:center;min-width:0}
+.p0{--pc:var(--p0);--ps:var(--p0-soft)}.p1{--pc:var(--p1);--ps:var(--p1-soft)}
+.p2{--pc:var(--p2);--ps:var(--p2-soft)}.p3{--pc:var(--p3);--ps:var(--p3-soft)}
+.pcard,.dcard,.player-btn{background:var(--ps);border-color:var(--pc)}
+.pcard.out{opacity:.4;filter:grayscale(.15)}
+.pname{font-size:12px;font-weight:840;color:var(--pc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pscore{font-size:27px;font-weight:880;margin-top:6px;line-height:1}
+.pscore.pos,.delta.pos{color:var(--green)}.pscore.neg,.delta.neg{color:var(--red)}
+.pstatus{font-size:10px;color:var(--muted);margin-top:6px}.pstatus.out{color:var(--red);font-weight:780}
+.delta-label{font-size:11px;color:var(--pc);font-weight:820;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.delta{font-size:23px;font-weight:880;margin-top:5px}.delta-note{font-size:10px;color:var(--muted);margin-top:4px}
+.mode-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.mode-btn{border:1px solid var(--line);background:#f4f0e9;border-radius:14px;padding:11px 4px;font-size:12px;font-weight:820;color:#625b52}
+.mode-btn.selected{background:var(--purple);border-color:var(--purple);color:#fff}
+.label{font-size:12px;color:var(--muted);font-weight:760;margin:14px 0 8px}
+.player-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.player-btn{border:2px solid var(--pc);border-radius:16px;padding:12px 5px;text-align:center;color:var(--pc);font-weight:840;min-height:58px}
+.player-btn .sub{display:block;font-size:10px;color:var(--muted);margin-top:4px;font-weight:650}
+.player-btn.selected{box-shadow:0 0 0 3px rgba(32,35,41,.12);transform:translateY(-1px)}
+.player-btn.disabled{opacity:.3;filter:grayscale(.3)}.player-btn.payer{background:#2f3138;color:white;border-color:#2f3138}.player-btn.payer .sub{color:#d5d5d7}
+.winner-configs{display:grid;gap:10px;margin-top:10px}
+.winner-config{border:1px solid var(--line);border-left:5px solid var(--pc);border-radius:17px;background:#fbfaf7;padding:12px}
+.config-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.config-name{font-size:14px;font-weight:850;color:var(--pc)}
+.remove-btn{border:0;background:#efe9e1;color:#6b6258;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:760}
+.config-grid{display:grid;grid-template-columns:1.2fr .7fr 1.2fr;gap:8px}
+.field label{display:block;font-size:10px;color:var(--muted);font-weight:730;margin-bottom:4px}
+select{width:100%;min-height:42px;border:1px solid var(--line);background:white;border-radius:12px;padding:8px 9px;color:var(--ink)}
+.checkline{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;background:white;padding:8px 10px;margin-top:8px}
+.checkline b{font-size:12px}.checkline small{font-size:10px;color:var(--muted);display:block;margin-top:2px}
+.switch{width:46px;height:27px;border-radius:999px;background:#d8d1c7;padding:3px;transition:.18s}
+.switch::after{content:"";display:block;width:21px;height:21px;border-radius:50%;background:white;box-shadow:0 2px 7px rgba(0,0,0,.14);transition:.18s}
+.switch.on{background:var(--purple)}.switch.on::after{transform:translateX(19px)}
+.live-box{background:var(--gold-soft);border:1px solid #ead8ad;border-radius:19px;padding:14px;margin-top:14px}
+.live-title{text-align:center;font-size:13px;color:#79531a;font-weight:820;margin-bottom:10px}
+.live-summary{text-align:center;color:#68450f;font-size:13px;line-height:1.55;margin-top:10px}.live-summary b{font-size:17px}
+.flow-list{margin-top:12px;display:grid;gap:7px}.flow-item{background:rgba(255,255,255,.58);border:1px solid #ead8ad;border-radius:12px;padding:9px 10px;font-size:12px;color:#6d5123;line-height:1.45}.rename-tip{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+.settle-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.settle-card{border:2px solid var(--pc);background:var(--ps);border-radius:16px;padding:10px 6px;text-align:center}.settle-card .name{font-size:11px;font-weight:820;color:var(--pc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settle-card .score{font-size:23px;font-weight:880;margin-top:5px}.settle-flow-list{display:grid;gap:8px;margin-top:12px}.settle-flow{border:1px solid var(--line);background:#fbfaf7;border-radius:14px;padding:11px 12px;font-size:13px;line-height:1.45}.round-status-list{display:grid;gap:10px}.round-status-row{border:1px solid var(--line);border-left:5px solid var(--pc);border-radius:16px;background:#fbfaf7;padding:11px}.round-status-head{font-size:13px;font-weight:840;color:var(--pc);margin-bottom:8px}.round-status-fields{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}.round-preview{margin-top:12px;background:var(--gold-soft);border:1px solid #ead8ad;border-radius:16px;padding:12px}.round-preview-title{text-align:center;font-size:12px;font-weight:820;color:#79531a;margin-bottom:8px}.round-preview-empty{text-align:center;color:var(--muted);font-size:12px}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}@media(max-width:600px){.settle-grid{grid-template-columns:1fr 1fr}.round-status-fields{grid-template-columns:1fr}}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
+.btn{border:0;border-radius:17px;padding:14px 12px;min-height:50px;font-weight:860}.btn.ghost{background:#efeae2;color:#514b44}.btn.ok{background:var(--purple);color:#fff}
+.helper{text-align:center;color:var(--muted);font-size:11px;line-height:1.5;margin-top:9px}
+.list-line{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding:12px 0}.list-line:first-child{border-top:0;padding-top:0}
+.list-main{font-size:14px;font-weight:820}.list-sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.list-score{font-weight:860;white-space:nowrap}
+.round-settlement{margin-top:14px;border-top:2px dashed var(--line);padding-top:13px}.round-settlement-title{font-size:13px;font-weight:850;margin-bottom:8px}.round-settlement-sub{font-size:11px;color:var(--muted);margin-bottom:9px}.round-flow-list{display:grid;gap:7px}.round-flow{border:1px solid var(--line);background:#fbfaf7;border-radius:13px;padding:10px 11px;font-size:12px;line-height:1.45}.round-net-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px}.round-net{border-radius:12px;padding:8px 5px;text-align:center;background:var(--ps);border:1px solid var(--pc)}.round-net-name{font-size:10px;color:var(--pc);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.round-net-score{font-size:17px;font-weight:880;margin-top:3px}@media(max-width:600px){.round-net-grid{grid-template-columns:1fr 1fr}}
+.empty{text-align:center;color:var(--muted);padding:12px 4px;font-size:13px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}.smallbtn{border:0;border-radius:12px;padding:8px 10px;font-size:12px;font-weight:760;background:#eee8de;color:#4c4741}.smallbtn.danger{background:#f7e9e6;color:#a13f39}
+.overlay{position:fixed;inset:0;background:rgba(25,22,19,.34);display:none;align-items:flex-end;z-index:30}.overlay.open{display:flex}
+.sheet{width:100%;max-width:760px;margin:auto;background:#fff;border-radius:26px 26px 0 0;padding:18px 15px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field2 label{font-size:11px;color:var(--muted);font-weight:760;display:block;margin-bottom:5px}
+.field2 input,.field2 select{width:100%;min-height:46px;border:1px solid var(--line);background:#fbfaf7;border-radius:14px;padding:10px 12px;color:var(--ink)}
+.note{background:#f4f0f7;color:#5c4d6d;border-radius:15px;padding:11px 12px;font-size:11px;line-height:1.55;margin-top:10px}
+.hidden{display:none!important}
+@media(max-width:600px){.scoreboard,.delta-board{grid-template-columns:1fr 1fr}.mode-grid{grid-template-columns:repeat(3,1fr)}.player-grid{grid-template-columns:1fr 1fr}.config-grid{grid-template-columns:1fr 1fr}.config-grid .field:first-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div><h1 class="title">川麻记分</h1><div class="subtitle">V8.2 · 修正版查叫：未下叫赔给已下叫</div></div>
+    <button class="icon-btn" id="settingsBtn">设置/改名</button>
+  </div>
+  <section class="card">
+    <div class="section-head"><div><div class="section-title">总积分</div><div class="section-sub">已确认记录的累计结果</div></div><span class="pill" id="roundTag">第 1 局</span></div>
+    <div class="scoreboard" id="scoreboard"></div>
+  </section>
+  <section class="card">
+    <div class="section-head"><div><div class="section-title">本次结算</div><div class="section-sub">不用等确认，下面的分数会实时变化</div></div><button class="smallbtn" id="clearDraftBtn">清空选择</button></div>
+    <div class="label">1. 发生了什么？</div>
+    <div class="mode-grid" id="modeGrid">
+      <button class="mode-btn selected" data-mode="dianpao">点炮胡</button><button class="mode-btn" data-mode="zimo">自摸</button><button class="mode-btn" data-mode="anyu">暗杠</button><button class="mode-btn" data-mode="dianyu">明杠</button><button class="mode-btn" data-mode="bayu">补杠</button>
+    </div>
+    <div id="dianpaoArea">
+      <div class="label">2. 谁点炮？</div><div class="player-grid" id="payerGrid"></div>
+      <div class="label">3. 谁胡了？（可以多选）</div><div class="player-grid" id="winnerGrid"></div><div class="winner-configs" id="winnerConfigs"></div>
+    </div>
+    <div id="singleArea" class="hidden">
+      <div class="label" id="singleWinnerLabel">2. 谁得分？</div><div class="player-grid" id="singleWinnerGrid"></div><div class="winner-configs" id="singleWinnerConfig"></div>
+      <div id="singlePayerArea" class="hidden"><div class="label">3. 谁点杠？</div><div class="player-grid" id="singlePayerGrid"></div></div>
+    </div>
+    <div class="live-box"><div class="live-title">实时结算预览</div><div class="delta-board" id="deltaBoard"></div><div class="live-summary" id="liveSummary">请选择玩家，结果会立即显示。</div><div class="flow-list" id="flowList"></div></div>
+    <div class="actions"><button class="btn ghost" id="undoBtn">撤销上一笔</button><button class="btn ok" id="confirmBtn">确认入账</button></div>
+    <div class="helper">点炮胡支持一炮多响；每位赢家可以分别设置不同牌型、根数和特殊情况。</div><div class="rename-tip">右上角“设置/改名”里可以把默认的玩家1、2、3、4改成你们自己的名字。</div>
+  </section>
+  <section class="card">
+    <div class="section-head"><div><div class="section-title">本局记录</div><div class="section-sub">本局已确认的结算</div></div><div class="toolbar"><button class="smallbtn" id="endRoundBtn">结束本局 / 查叫</button><button class="smallbtn" id="nextRoundBtn">直接下一局</button></div></div>
+    <div id="eventList"></div><div id="roundSettlement"></div>
+  </section>
+  <section class="card">
+    <div class="section-head"><div><div class="section-title">数据</div><div class="section-sub">自动保存在本机</div></div><div class="toolbar"><button class="smallbtn" id="finalSettlementBtn">最终结算</button><button class="smallbtn" id="exportBtn">导出 CSV</button><button class="smallbtn danger" id="resetBtn">全部清零</button></div></div>
+    <div class="helper" id="historyText"></div>
+  </section>
+</div>
+<div class="overlay" id="roundEndOverlay">
+  <div class="sheet">
+    <div class="section-head"><div><div class="section-title">结束本局 / 查叫</div><div class="section-sub">只处理仍未胡的玩家：已下叫者收款，未下叫者付款</div></div><button class="icon-btn" id="roundEndClose">取消</button></div>
+    <div class="round-status-list" id="roundStatusList"></div>
+    <div class="round-preview"><div class="round-preview-title">查叫付款预览</div><div id="roundTransferPreview"></div></div>
+    <div class="note">查叫规则：已下叫但未胡的玩家不需要额外付款；每位未下叫玩家，分别向每位已下叫未胡玩家支付其“最大可胡牌型”的点炮分。若全部已下叫或全部未下叫，则查叫为 0。</div>
+    <div class="modal-actions"><button class="btn ghost" id="roundEndCancel">返回</button><button class="btn ok" id="roundEndConfirm">确认并开始下一局</button></div>
+  </div>
+</div>
+<div class="overlay" id="finalSettlementOverlay">
+  <div class="sheet">
+    <div class="section-head"><div><div class="section-title">最终结算</div><div class="section-sub">按当前累计净分，自动合并成最少付款笔数</div></div><button class="icon-btn" id="finalSettlementClose">完成</button></div>
+    <div class="settle-grid" id="finalTotals"></div>
+    <div class="label">最后谁给谁多少分</div>
+    <div class="settle-flow-list" id="finalFlows"></div>
+    <div class="note">这里仅汇总付款关系，不会修改现有积分记录。</div>
+  </div>
+</div>
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <div class="section-head"><div><div class="section-title">设置 / 改名</div><div class="section-sub">这里可以修改玩家名称与规则</div></div><div class="toolbar"><button class="smallbtn" id="restorePlayersBtn">恢复默认玩家</button><button class="icon-btn" id="settingsDone">完成</button></div></div>
+    <div class="settings-grid" id="nameSettings"></div>
+    <div class="settings-grid" style="margin-top:12px">
+      <div class="field2"><label>自摸规则</label><select id="zimoRule"><option value="double">自摸加倍</option><option value="add">自摸加底</option></select></div>
+      <div class="field2"><label>封顶分</label><input id="cap" type="number" min="1"></div>
+      <div class="field2"><label>自摸加底</label><input id="zimoAdd" type="number" min="0"></div>
+      <div class="field2"><label>补杠 / 每人</label><input id="bayu" type="number" min="0"></div>
+      <div class="field2"><label>明杠 / 点杠者</label><input id="dianyu" type="number" min="0"></div>
+      <div class="field2"><label>暗杠 / 每人</label><input id="anyu" type="number" min="0"></div>
+    </div>
+    <div class="note">点炮胡可以选择多个赢家；自摸、暗杠和补杠会自动向所有仍在局中的其他玩家结算。玩家默认名称可直接在这里改成你们自己的名字。</div>
+  </div>
+</div>
+<script>
+const HANDS=[{name:'平胡',base:1},{name:'对对胡',base:2},{name:'清一色',base:4},{name:'小七对',base:4},{name:'龙七对',base:8},{name:'金钩吊',base:4},{name:'16分牌型',base:16}];
+const DEF={players:['玩家1','玩家2','玩家3','玩家4'],rules:{zimo:'double',cap:16,zimoAdd:1,bayu:1,dianyu:2,anyu:2},round:1,active:[true,true,true,true],events:[]};
+let state=load();let draft=newDraft();let roundEndState={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function newWinner(player){return {player,hand:0,roots:0,special:'normal',haidi:false};}
+function newDraft(){return {mode:'dianpao',payer:null,winners:[],singleWinner:null,singlePayer:null};}
+function normalizeState(x){
+  const s=clone(DEF);
+  if(!x||typeof x!=='object')return s;
+  if(Array.isArray(x.players))s.players=[0,1,2,3].map(i=>String(x.players[i]||`玩家${i+1}`));
+  if(x.rules&&typeof x.rules==='object')s.rules={...s.rules,...x.rules};
+  s.round=Math.max(1,Number(x.round)||1);
+  s.active=Array.isArray(x.active)?[0,1,2,3].map(i=>x.active[i]!==false):[true,true,true,true];
+  s.events=Array.isArray(x.events)?x.events:[];
+  return s;
+}
+function load(){
+  try{
+    const current=JSON.parse(localStorage.getItem('xuezhan-live-v8'));
+    if(current)return normalizeState(current);
+    const prior=JSON.parse(localStorage.getItem('xuezhan-live-v7'));
+    if(prior){const migrated=normalizeState(prior);migrated.active=[true,true,true,true];return migrated;}
+  }catch(e){}
+  return clone(DEF);
+}
+function save(){localStorage.setItem('xuezhan-live-v8',JSON.stringify(state));}
+const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function eventLabel(m){return ({dianpao:'点炮胡',zimo:'自摸',anyu:'暗杠',dianyu:'明杠',bayu:'补杠',liuju:'流局查叫'})[m]||m;}
+function specialName(k){return ({normal:'普通',gangshanghua:'杠上花',gangshangpao:'杠上炮',qiangganghu:'抢杠胡'})[k]||k;}
+function totals(){const t=[0,0,0,0];state.events.forEach(e=>e.deltas.forEach((v,i)=>t[i]+=v));return t;}
+function fanBonus(w){return (w.special!=='normal'?1:0)+(w.haidi?1:0);}
+function huScore(w,isZimo){let v=HANDS[w.hand].base*Math.pow(2,w.roots+fanBonus(w));v=Math.min(state.rules.cap,v);if(isZimo)v=state.rules.zimo==='double'?Math.min(state.rules.cap,v*2):v+state.rules.zimoAdd;return v;}
+function newWinnerFromSingle(){const panel=document.querySelector('#singleWinnerConfig .winner-config');if(!panel)return newWinner(draft.singleWinner);return {player:draft.singleWinner,hand:Number(panel.querySelector('[data-field="hand"]').value),roots:Number(panel.querySelector('[data-field="roots"]').value),special:panel.querySelector('[data-field="special"]').value,haidi:panel.querySelector('[data-field="haidi"]').classList.contains('on')};}
+function currentDeltas(){const d=[0,0,0,0];if(draft.mode==='dianpao'){if(draft.payer===null||draft.winners.length===0)return d;draft.winners.forEach(w=>{const unit=huScore(w,false);d[w.player]+=unit;d[draft.payer]-=unit;});}else if(draft.mode==='zimo'){if(draft.singleWinner===null)return d;const w=newWinnerFromSingle(),unit=huScore(w,true),payers=state.active.map((a,i)=>a&&i!==draft.singleWinner?i:null).filter(i=>i!==null);d[draft.singleWinner]+=unit*payers.length;payers.forEach(i=>d[i]-=unit);}else if(['anyu','bayu'].includes(draft.mode)){if(draft.singleWinner===null)return d;const unit=draft.mode==='anyu'?state.rules.anyu:state.rules.bayu,payers=state.active.map((a,i)=>a&&i!==draft.singleWinner?i:null).filter(i=>i!==null);d[draft.singleWinner]+=unit*payers.length;payers.forEach(i=>d[i]-=unit);}else if(draft.mode==='dianyu'){if(draft.singleWinner===null||draft.singlePayer===null)return d;d[draft.singleWinner]+=state.rules.dianyu;d[draft.singlePayer]-=state.rules.dianyu;}return d;}
+function currentTransfers(){
+  const arr=[];
+  if(draft.mode==='dianpao'){
+    if(draft.payer===null||draft.winners.length===0)return arr;
+    draft.winners.forEach(w=>{const unit=huScore(w,false);arr.push({from:draft.payer,to:w.player,score:unit});});
+  }else if(draft.mode==='zimo'){
+    if(draft.singleWinner===null)return arr;
+    const w=newWinnerFromSingle(),unit=huScore(w,true);
+    state.active.forEach((a,i)=>{if(a&&i!==draft.singleWinner)arr.push({from:i,to:draft.singleWinner,score:unit});});
+  }else if(draft.mode==='anyu'||draft.mode==='bayu'){
+    if(draft.singleWinner===null)return arr;
+    const unit=draft.mode==='anyu'?state.rules.anyu:state.rules.bayu;
+    state.active.forEach((a,i)=>{if(a&&i!==draft.singleWinner)arr.push({from:i,to:draft.singleWinner,score:unit});});
+  }else if(draft.mode==='dianyu'){
+    if(draft.singleWinner===null||draft.singlePayer===null)return arr;
+    arr.push({from:draft.singlePayer,to:draft.singleWinner,score:state.rules.dianyu});
+  }
+  return arr;
+}
+function renderScoreboard(){const t=totals();$('#scoreboard').innerHTML=state.players.map((p,i)=>`<div class="pcard p${i} ${state.active[i]?'':'out'}"><div class="pname">${esc(p)}</div><div class="pscore ${t[i]>0?'pos':t[i]<0?'neg':''}">${t[i]>0?'+':''}${t[i]}</div><div class="pstatus ${state.active[i]?'':'out'}">${state.active[i]?'在局':'已胡'}</div></div>`).join('');$('#roundTag').textContent=`第 ${state.round} 局`;}
+function playerButtons(kind,selectedSet=[],payerValue=null){return state.players.map((p,i)=>{const active=state.active[i];let selected=selectedSet.includes(i),payer=payerValue===i,disabled=!active;if(kind==='winner'&&draft.mode==='dianpao'&&draft.payer===i)disabled=true;if(kind==='payer'&&draft.winners.some(w=>w.player===i))disabled=true;if(kind==='singlePayer'&&draft.singleWinner===i)disabled=true;return `<button class="player-btn p${i} ${selected?'selected':''} ${payer?'payer':''} ${disabled?'disabled':''}" data-kind="${kind}" data-player="${i}" ${disabled?'disabled':''}>${esc(p)}<span class="sub">${payer?'点炮/点杠者':selected?'已选择':active?'点我选择':'已胡'}</span></button>`;}).join('');}
+function renderPlayers(){$('#payerGrid').innerHTML=playerButtons('payer',[],draft.payer);$('#winnerGrid').innerHTML=playerButtons('winner',draft.winners.map(w=>w.player));$('#singleWinnerGrid').innerHTML=playerButtons('singleWinner',draft.singleWinner===null?[]:[draft.singleWinner]);$('#singlePayerGrid').innerHTML=playerButtons('singlePayer',[],draft.singlePayer);}
+function specialOptions(isZimo,selected){const arr=isZimo?[{v:'normal',t:'普通自摸'},{v:'gangshanghua',t:'杠上花 +1番'}]:[{v:'normal',t:'普通点炮'},{v:'gangshangpao',t:'杠上炮 +1番'},{v:'qiangganghu',t:'抢杠胡 +1番'}];return arr.map(x=>`<option value="${x.v}" ${x.v===selected?'selected':''}>${x.t}</option>`).join('');}
+function winnerConfigHtml(w,isZimo,removable){return `<div class="winner-config p${w.player}" data-player="${w.player}"><div class="config-head"><div class="config-name">${esc(state.players[w.player])}</div>${removable?'<button class="remove-btn" data-remove="'+w.player+'">移除</button>':''}</div><div class="config-grid"><div class="field"><label>牌型</label><select data-field="hand">${HANDS.map((h,i)=>`<option value="${i}" ${i===w.hand?'selected':''}>${h.name}（${h.base}）</option>`).join('')}</select></div><div class="field"><label>根数</label><select data-field="roots">${[0,1,2,3,4].map(n=>`<option value="${n}" ${n===w.roots?'selected':''}>${n}</option>`).join('')}</select></div><div class="field"><label>特殊</label><select data-field="special">${specialOptions(isZimo,w.special)}</select></div></div><div class="checkline" data-toggle-haidi><div><b>海底</b><small>开启后再加1番</small></div><div class="switch ${w.haidi?'on':''}" data-field="haidi"></div></div></div>`;}
+function renderWinnerConfigs(){$('#winnerConfigs').innerHTML=draft.winners.map(w=>winnerConfigHtml(w,false,true)).join('');if(draft.mode==='zimo'&&draft.singleWinner!==null){$('#singleWinnerConfig').innerHTML=winnerConfigHtml(newWinnerFromSingle(),true,false);}else{$('#singleWinnerConfig').innerHTML='';}}
+function syncWinnerConfig(panel){const player=Number(panel.dataset.player),target=draft.winners.find(w=>w.player===player);if(!target)return;target.hand=Number(panel.querySelector('[data-field="hand"]').value);target.roots=Number(panel.querySelector('[data-field="roots"]').value);target.special=panel.querySelector('[data-field="special"]').value;target.haidi=panel.querySelector('[data-field="haidi"]').classList.contains('on');}
+function renderMode(){$$('.mode-btn').forEach(b=>b.classList.toggle('selected',b.dataset.mode===draft.mode));const multi=draft.mode==='dianpao';$('#dianpaoArea').classList.toggle('hidden',!multi);$('#singleArea').classList.toggle('hidden',multi);$('#singlePayerArea').classList.toggle('hidden',draft.mode!=='dianyu');$('#singleWinnerLabel').textContent=draft.mode==='zimo'?'2. 谁自摸？':'2. 谁得分？';renderPlayers();renderWinnerConfigs();renderLive();}
+function renderLive(){const d=currentDeltas();$('#deltaBoard').innerHTML=state.players.map((p,i)=>`<div class="dcard p${i}"><div class="delta-label">${esc(p)}</div><div class="delta ${d[i]>0?'pos':d[i]<0?'neg':''}">${d[i]>0?'+':''}${d[i]}</div><div class="delta-note">${d[i]>0?'本次收入':d[i]<0?'本次支出':'暂无变化'}</div></div>`).join('');let text='请选择玩家，结果会立即显示。';const transfers=currentTransfers();if(d.some(v=>v!==0)){if(draft.mode==='dianpao'){text=`${state.players[draft.payer]} 共付 <b>${-d[draft.payer]}</b> 分；${draft.winners.map(w=>`${state.players[w.player]} 收 ${d[w.player]} 分`).join('，')}。`;}else{text=`${state.players[draft.singleWinner]} 本次共收 <b>${d[draft.singleWinner]}</b> 分。`;}}$('#liveSummary').innerHTML=text;$('#flowList').innerHTML=transfers.length?transfers.map(t=>`<div class="flow-item">${esc(state.players[t.from])} <b>给</b> ${esc(state.players[t.to])} <b>${t.score}</b> 分</div>`).join(''):'<div class="flow-item">这里会显示“谁给谁多少分”。</div>';}
+function clearDraft(){draft=newDraft();renderMode();}
+function isDraftValid(){if(draft.mode==='dianpao')return draft.payer!==null&&draft.winners.length>0;if(draft.mode==='dianyu')return draft.singleWinner!==null&&draft.singlePayer!==null;return draft.singleWinner!==null;}
+function confirmDraft(){if(!isDraftValid()){alert('请先选择完整的赢家和付款玩家。');return;}const deltas=currentDeltas();let detail={},winners=[];if(draft.mode==='dianpao'){winners=clone(draft.winners);detail={payer:draft.payer,winners};}else if(draft.mode==='zimo'){const w=newWinnerFromSingle();winners=[w];detail={winner:w};}else{detail={winner:draft.singleWinner,payer:draft.singlePayer};}state.events.push({id:Date.now()+Math.random(),round:state.round,mode:draft.mode,detail,deltas,activeBefore:state.active.slice()});if(['dianpao','zimo'].includes(draft.mode))winners.forEach(w=>state.active[w.player]=false);save();clearDraft();renderAll();}
+function buildRoundEndState(){roundEndState={};state.active.forEach((a,i)=>{if(a)roundEndState[i]={status:'ting',hand:0,roots:0};});}
+function roundEndScore(r){return Math.min(state.rules.cap,HANDS[Number(r.hand)||0].base*Math.pow(2,Number(r.roots)||0));}
+function renderRoundEnd(){
+  const activeIds=Object.keys(roundEndState).map(Number);
+  if(!activeIds.length){
+    $('#roundStatusList').innerHTML='<div class="empty">本局没有仍在局中的玩家。</div>';
+  }else{
+    $('#roundStatusList').innerHTML=activeIds.map(i=>{
+      const r=roundEndState[i],isTing=r.status==='ting';
+      return `<div class="round-status-row p${i}" data-round-player="${i}">
+        <div class="round-status-head">${esc(state.players[i])}</div>
+        <div class="round-status-fields">
+          <div class="field2"><label>最终状态</label><select data-round-field="status">
+            <option value="ting" ${isTing?'selected':''}>已下叫，但没有胡</option>
+            <option value="noting" ${!isTing?'selected':''}>未下叫</option>
+          </select></div>
+          ${isTing?`<div class="field2"><label>最大可胡牌型</label><select data-round-field="hand">
+            ${HANDS.map((h,n)=>`<option value="${n}" ${Number(r.hand)===n?'selected':''}>${h.name}（${h.base}分）</option>`).join('')}
+          </select></div>
+          <div class="field2"><label>根数</label><select data-round-field="roots">
+            ${[0,1,2,3,4].map(n=>`<option value="${n}" ${Number(r.roots)===n?'selected':''}>${n} 根</option>`).join('')}
+          </select></div>
+          <div class="field2"><label>每名未下叫玩家应付</label><select disabled><option>${roundEndScore(r)} 分</option></select></div>`:
+          `<div class="field2"><label>查叫身份</label><select disabled><option>付款方</option></select></div>`}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  renderRoundTransferPreview();
+}
+function calcRoundEndTransfers(){
+  const ting=[],noting=[];
+  Object.entries(roundEndState).forEach(([k,v])=>{
+    const i=Number(k);
+    if(v.status==='ting')ting.push({player:i,score:roundEndScore(v)});
+    else noting.push(i);
+  });
+  const transfers=[];
+  noting.forEach(from=>ting.forEach(t=>transfers.push({from,to:t.player,score:t.score})));
+  return transfers;
+}
+function roundEndDeltas(){const d=[0,0,0,0];calcRoundEndTransfers().forEach(t=>{d[t.from]-=t.score;d[t.to]+=t.score;});return d;}
+function renderRoundTransferPreview(){
+  const transfers=calcRoundEndTransfers();
+  const tingCount=Object.values(roundEndState).filter(v=>v.status==='ting').length;
+  const notingCount=Object.values(roundEndState).filter(v=>v.status==='noting').length;
+  if(!transfers.length){
+    const reason=tingCount===0?'没有已下叫的收款方。':notingCount===0?'所有未胡玩家都已下叫，无人需要赔付。':'当前状态下没有查叫付款。';
+    $('#roundTransferPreview').innerHTML=`<div class="round-preview-empty">${reason}</div>`;
+  }else{
+    $('#roundTransferPreview').innerHTML=transfers.map(t=>`<div class="flow-item">${esc(state.players[t.from])} 给 ${esc(state.players[t.to])} <b>${t.score}</b> 分</div>`).join('');
+  }
+}
+function openRoundEnd(){buildRoundEndState();renderRoundEnd();$('#roundEndOverlay').classList.add('open');}
+function closeRoundEnd(){$('#roundEndOverlay').classList.remove('open');}
+function confirmRoundEnd(){const statuses=clone(roundEndState),transfers=calcRoundEndTransfers(),deltas=roundEndDeltas();state.events.push({id:Date.now()+Math.random(),round:state.round,mode:'liuju',detail:{statuses,transfers},deltas,activeBefore:state.active.slice()});state.round++;state.active=[true,true,true,true];save();closeRoundEnd();clearDraft();renderAll();}
+function totalsForRound(round){const t=[0,0,0,0];state.events.filter(e=>e.round===round).forEach(e=>e.deltas.forEach((v,i)=>t[i]+=v));return t;}
+function transfersFromTotals(t){const debt=t.map((v,i)=>({player:i,amount:-v})).filter(x=>x.amount>0);const credit=t.map((v,i)=>({player:i,amount:v})).filter(x=>x.amount>0);const out=[];let di=0,ci=0;while(di<debt.length&&ci<credit.length){const amount=Math.min(debt[di].amount,credit[ci].amount);if(amount>0)out.push({from:debt[di].player,to:credit[ci].player,score:amount});debt[di].amount-=amount;credit[ci].amount-=amount;if(debt[di].amount===0)di++;if(credit[ci].amount===0)ci++;}return out;}
+function renderRoundSettlement(){const roundEvents=state.events.filter(e=>e.round===state.round);if(!roundEvents.length){$('#roundSettlement').innerHTML='';return;}const t=totalsForRound(state.round);const flows=transfersFromTotals(t);$('#roundSettlement').innerHTML=`<div class="round-settlement"><div class="round-settlement-title">本局最终结算</div><div class="round-settlement-sub">按本局所有已确认记录净额合并，尽量减少付款笔数</div><div class="round-net-grid">${state.players.map((p,i)=>`<div class="round-net p${i}"><div class="round-net-name">${esc(p)}</div><div class="round-net-score ${t[i]>0?'pos':t[i]<0?'neg':''}">${t[i]>0?'+':''}${t[i]}</div></div>`).join('')}</div><div class="round-flow-list">${flows.length?flows.map(x=>`<div class="round-flow">${esc(state.players[x.from])} 给 ${esc(state.players[x.to])} <b>${x.score}</b> 分</div>`).join(''):'<div class="round-flow">本局净分已经平衡，无需付款。</div>'}</div></div>`;}
+function finalTransfers(){return transfersFromTotals(totals());}
+function openFinalSettlement(){const t=totals();$('#finalTotals').innerHTML=state.players.map((p,i)=>`<div class="settle-card p${i}"><div class="name">${esc(p)}</div><div class="score ${t[i]>0?'pos':t[i]<0?'neg':''}">${t[i]>0?'+':''}${t[i]}</div></div>`).join('');const flows=finalTransfers();$('#finalFlows').innerHTML=flows.length?flows.map(x=>`<div class="settle-flow">${esc(state.players[x.from])} 给 ${esc(state.players[x.to])} <b>${x.score}</b> 分</div>`).join(''):'<div class="empty">当前所有玩家净分均已平衡，无需付款。</div>';$('#finalSettlementOverlay').classList.add('open');}
+function closeFinalSettlement(){$('#finalSettlementOverlay').classList.remove('open');}
+function renderEvents(){const list=state.events.filter(e=>e.round===state.round).slice().reverse();if(!list.length){$('#eventList').innerHTML='<div class="empty">本局还没有记录</div>';renderRoundSettlement();return;}$('#eventList').innerHTML=list.map(e=>{let sub='';if(e.mode==='dianpao'){sub=`${state.players[e.detail.payer]} 点炮；`+e.detail.winners.map(w=>`${state.players[w.player]}：${HANDS[w.hand].name}${w.roots?`/ ${w.roots}根`:''}${w.special!=='normal'?`/ ${specialName(w.special)}`:''}${w.haidi?'/ 海底':''}`).join('；');}else if(e.mode==='zimo'){const w=e.detail.winner;sub=`${state.players[w.player]}：${HANDS[w.hand].name}${w.roots?`/ ${w.roots}根`:''}${w.special!=='normal'?`/ ${specialName(w.special)}`:''}${w.haidi?'/ 海底':''}`;}else if(e.mode==='dianyu'){sub=`${state.players[e.detail.winner]} 得分，${state.players[e.detail.payer]} 付款`;}else if(e.mode==='liuju'){const arr=Object.entries(e.detail.statuses||{}).map(([i,v])=>v.status==='ting'?`${state.players[Number(i)]}：已下叫未胡（${HANDS[Number(v.hand)||0].name}${Number(v.roots)?`/${v.roots}根`:''}）`:`${state.players[Number(i)]}：未下叫`);const pays=(e.detail.transfers||[]).map(t=>`${state.players[t.from]}给${state.players[t.to]}${t.score}分`);sub=arr.join('；')+(pays.length?'；'+pays.join('，'):'；无查叫付款');}else{sub=`${state.players[e.detail.winner]} 得分`;}const plus=e.deltas.filter(v=>v>0).reduce((a,b)=>a+b,0);return `<div class="list-line"><div><div class="list-main">${eventLabel(e.mode)}</div><div class="list-sub">${esc(sub)}</div></div><div class="list-score">${plus?`+${plus}`:'0'}</div></div>`;}).join('');renderRoundSettlement();}
+function renderHistory(){const rounds=new Set(state.events.map(e=>e.round)).size;$('#historyText').textContent=`已记录 ${rounds} 局、${state.events.length} 笔结算。`;}
+function renderAll(){renderScoreboard();renderMode();renderEvents();renderHistory();}
+function undo(){if(!state.events.length){alert('没有可以撤销的记录。');return;}const e=state.events.pop();state.active=e.activeBefore.slice();save();clearDraft();renderAll();}
+function nextRound(){if(!confirm('结束本局并开始下一局？总积分会继续累计。'))return;state.round++;state.active=[true,true,true,true];save();clearDraft();renderAll();}
+function resetAll(){if(!confirm('确定清除全部积分和记录吗？'))return;state.events=[];state.round=1;state.active=[true,true,true,true];save();clearDraft();renderAll();}
+function exportCsv(){const rows=[['局号','事件','玩家1变化','玩家2变化','玩家3变化','玩家4变化','明细']];state.events.forEach(e=>rows.push([e.round,eventLabel(e.mode),...e.deltas,JSON.stringify(e.detail)]));const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`川麻记分_${new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function openSettings(){$('#nameSettings').innerHTML=state.players.map((p,i)=>`<div class="field2"><label>玩家${i+1}</label><input class="nameInput" data-i="${i}" value="${esc(p)}"></div>`).join('');$('#zimoRule').value=state.rules.zimo;$('#cap').value=state.rules.cap;$('#zimoAdd').value=state.rules.zimoAdd;$('#bayu').value=state.rules.bayu;$('#dianyu').value=state.rules.dianyu;$('#anyu').value=state.rules.anyu;$('#settingsOverlay').classList.add('open');}
+function closeSettings(){$$('.nameInput').forEach(x=>{const i=Number(x.dataset.i);state.players[i]=x.value.trim()||`玩家${i+1}`;});state.rules={zimo:$('#zimoRule').value,cap:Math.max(1,Number($('#cap').value)||16),zimoAdd:Math.max(0,Number($('#zimoAdd').value)||0),bayu:Math.max(0,Number($('#bayu').value)||0),dianyu:Math.max(0,Number($('#dianyu').value)||0),anyu:Math.max(0,Number($('#anyu').value)||0)};save();$('#settingsOverlay').classList.remove('open');renderAll();}
+$('#modeGrid').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(!b)return;draft=newDraft();draft.mode=b.dataset.mode;renderMode();});
+$('#payerGrid').addEventListener('click',e=>{const b=e.target.closest('[data-player]');if(!b)return;draft.payer=Number(b.dataset.player);renderMode();});
+$('#winnerGrid').addEventListener('click',e=>{const b=e.target.closest('[data-player]');if(!b)return;const p=Number(b.dataset.player),idx=draft.winners.findIndex(w=>w.player===p);if(idx>=0)draft.winners.splice(idx,1);else draft.winners.push(newWinner(p));renderMode();});
+$('#singleWinnerGrid').addEventListener('click',e=>{const b=e.target.closest('[data-player]');if(!b)return;draft.singleWinner=Number(b.dataset.player);draft.singlePayer=draft.singlePayer===draft.singleWinner?null:draft.singlePayer;renderMode();});
+$('#singlePayerGrid').addEventListener('click',e=>{const b=e.target.closest('[data-player]');if(!b)return;draft.singlePayer=Number(b.dataset.player);renderMode();});
+$('#winnerConfigs').addEventListener('change',e=>{const panel=e.target.closest('.winner-config');if(panel){syncWinnerConfig(panel);renderLive();}});
+$('#winnerConfigs').addEventListener('click',e=>{const rm=e.target.closest('[data-remove]');if(rm){draft.winners=draft.winners.filter(w=>w.player!==Number(rm.dataset.remove));renderMode();return;}const toggle=e.target.closest('[data-toggle-haidi]');if(toggle){toggle.querySelector('[data-field="haidi"]').classList.toggle('on');syncWinnerConfig(toggle.closest('.winner-config'));renderLive();}});
+$('#singleWinnerConfig').addEventListener('change',()=>renderLive());
+$('#singleWinnerConfig').addEventListener('click',e=>{const toggle=e.target.closest('[data-toggle-haidi]');if(toggle){toggle.querySelector('[data-field="haidi"]').classList.toggle('on');renderLive();}});
+$('#clearDraftBtn').addEventListener('click',clearDraft);$('#confirmBtn').addEventListener('click',confirmDraft);$('#undoBtn').addEventListener('click',undo);$('#nextRoundBtn').addEventListener('click',nextRound);$('#resetBtn').addEventListener('click',resetAll);$('#exportBtn').addEventListener('click',exportCsv);$('#endRoundBtn').addEventListener('click',openRoundEnd);$('#roundEndClose').addEventListener('click',closeRoundEnd);$('#roundEndCancel').addEventListener('click',closeRoundEnd);$('#roundEndConfirm').addEventListener('click',confirmRoundEnd);$('#roundEndOverlay').addEventListener('click',e=>{if(e.target.id==='roundEndOverlay')closeRoundEnd();});$('#roundStatusList').addEventListener('change',e=>{const row=e.target.closest('[data-round-player]');if(!row)return;const i=Number(row.dataset.roundPlayer),field=e.target.dataset.roundField;if(field==='status'){roundEndState[i].status=e.target.value;renderRoundEnd();}else if(field==='hand'){roundEndState[i].hand=Number(e.target.value);renderRoundEnd();}else if(field==='roots'){roundEndState[i].roots=Number(e.target.value);renderRoundEnd();}});$('#finalSettlementBtn').addEventListener('click',openFinalSettlement);$('#finalSettlementClose').addEventListener('click',closeFinalSettlement);$('#finalSettlementOverlay').addEventListener('click',e=>{if(e.target.id==='finalSettlementOverlay')closeFinalSettlement();});$('#settingsBtn').addEventListener('click',openSettings);$('#restorePlayersBtn').addEventListener('click',()=>{state.players=['玩家1','玩家2','玩家3','玩家4'];state.active=[true,true,true,true];save();openSettings();renderAll();});$('#settingsDone').addEventListener('click',closeSettings);$('#settingsOverlay').addEventListener('click',e=>{if(e.target.id==='settingsOverlay')closeSettings();});
+renderAll();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}
+</script>
+</body>
+</html>
